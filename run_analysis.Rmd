@@ -1,0 +1,324 @@
+---
+title: "Getting and Cleaning Data: Peer Assessment"
+author: "Hariharan D"
+date: "Tuesday, 11^th^ July 2017"
+output: 
+  html_document:
+    toc: false
+    toc_float: false
+    keep_md: true
+---
+
+<style>
+body {
+text-align: justify}
+</style>
+
+### Introduction
+
+One of the most exciting areas in all of data science right now is wearables computing - see for example this **[article](http://www.insideactivitytracking.com/data-science-activity-tracking-and-the-battle-for-the-worlds-top-sports-brand/)** . Companies like Fitbit, Nike, and Jawbone Up are racing to develop the most advanced algorithms to attract new users. The data linked to from the course website represent data collected from the accelerometers from the Samsung Galaxy S smartphone. A full description is available at the site where the data was obtained.
+
+* Data for this project is sourced from **[UCI Machine Learning Repository](http://archive.ics.uci.edu/ml/index.php)** website
+
+* Raw data source can be obtained from **[here](https://d396qusza40orc.cloudfront.net/getdata%2Fprojectfiles%2FUCI%20HAR%20Dataset.zip)**
+
+* Description of the data source is avaible  **[here](http://archive.ics.uci.edu/ml/datasets/Human+Activity+Recognition+Using+Smartphones)**
+
+R script called **"run_analysis.R"** does the following;
+
+1. Merges the training and the test sets to create one data set
+2. Extracts only the measurements on the mean and standard deviation for each measurement
+3. Uses descriptive activity names to name the activities in the data set
+4. Appropriately labels the data set with descriptive variable names
+5. From the data set in step 4, creates a second, independent tidy data set with the average of each variable for each activity and each subject
+
+
+This document contains necessary code and output report that answers the questions detailed in this assignment, using a single **R Markdown** document that can be processed by **knitr** and be transformed into an **HTML file**.
+
+
+### Set Options and Load R Library
+
+Set the chunk options.
+
+```{r Set Options, include = TRUE}
+
+library(knitr)
+
+knitr::opts_chunk$set(echo = TRUE, tidy = TRUE, message = FALSE, fig.align = "center")
+
+```
+
+Load the necessary libraries.
+
+Note: It is assumed that the below libraries are aready installed.
+
+```{r R Library}
+
+library(plyr)
+
+```
+
+### Loading and preprocessing the data
+
+
+* Download the file to "data" folder in the current working directory
+
+```{r Download Data}
+
+if(!file.exists("./data"))
+  {
+    dir.create("./data")
+  }
+
+fileUrl <- "https://d396qusza40orc.cloudfront.net/getdata%2Fprojectfiles%2FUCI%20HAR%20Dataset.zip"
+
+download.file(fileUrl, destfile="./data/HAR_Dataset.zip")
+
+```
+
+
+* Unzip the files and place it in the folder "UCI HAR Dataset". Get the list of the files in the unzipped directory.
+
+```{r Unzip Data}
+
+unzip(zipfile = "./data/HAR_Dataset.zip", exdir = "./data")
+
+pathFiles <- file.path("./data", "UCI HAR Dataset")
+
+files <- list.files(pathFiles, recursive=TRUE)
+
+files
+
+```
+
+
+* Read data from the unzipped data files into the variables using **"read.table()"** function
+
+1. Activity Files
+
+```{r Activity Data}
+
+#Test Data
+
+activityTest <- read.table("./data/UCI HAR Dataset/test/y_test.txt",header = FALSE)
+
+str(activityTest)
+
+
+#Training Data
+
+activityTrain <- read.table("./data/UCI HAR Dataset/train/y_train.txt",header = FALSE)
+
+str(activityTrain)
+
+```
+
+
+2. Subject Files
+
+```{r Subject Data}
+
+#Test Data
+
+subjectTest <- read.table("./data/UCI HAR Dataset/test/subject_test.txt",header = FALSE)
+
+str(subjectTest)
+
+
+#Training Data
+
+subjectTrain <- read.table("./data/UCI HAR Dataset/train/subject_train.txt",header = FALSE)
+
+str(subjectTrain)
+
+```
+
+
+3. Features Files
+
+```{r Features Data}
+
+#Test Data
+
+featuresTest <- read.table("./data/UCI HAR Dataset/test/X_test.txt" ,header = FALSE)
+
+str(featuresTest)
+
+
+#Training Data
+
+featuresTrain <- read.table("./data/UCI HAR Dataset/train/X_train.txt",header = FALSE)
+
+str(featuresTrain)
+
+```
+
+
+4. Variable Names Files
+
+```{r Variable Names Data}
+
+variableNames <- read.table("./data/UCI HAR Dataset/features.txt",head=FALSE)
+
+str(featuresTrain)
+
+```
+
+
+### Merges the training and the test data sets to create one data set
+
+* Concatenate the data tables by rows
+
+```{r Concatenate Data}
+
+subject <- rbind(subjectTrain, subjectTest)
+
+activity<- rbind(activityTrain, activityTest)
+
+features<- rbind(featuresTrain, featuresTest)
+
+```
+
+* Set names to variables - **Subject, Activity and Features**
+
+```{r Set Variable Names}
+
+names(subject) <- c("subject")
+
+names(activity) <- c("activity")
+
+names(features) <- variableNames$V2
+
+```
+
+
+* Merge columns to get the data frame **"allData"**
+
+```{r Merge Columns}
+
+interimData <- cbind(subject, activity)
+
+allData <- cbind(features, interimData)
+
+```
+
+
+### Extracts only the measurements on the mean and standard deviation for each measurement
+
+* Subset feature names by measuring the **"mean"** and **"standard deviation"**
+
+```{r Feature Names}
+
+subsetVariableNames <- variableNames$V2[grep("mean\\(\\)|std\\(\\)", variableNames$V2)]
+
+```
+
+
+* Subset the data frame **"allData"** by seleted names of Features
+
+```{r Subset Data Frame}
+
+finalVariableNames <- c(as.character(subsetVariableNames), "subject", "activity" )
+
+allData <- subset(allData, select = finalVariableNames)
+
+```
+
+
+* Check the structures of the data frame **"allData"**
+
+```{r Check Structure}
+
+str(allData)
+
+```
+
+
+### Uses descriptive activity names to name the activities in the data set
+
+
+* Read descriptive activity names from **"activity_labels.txt"**
+
+```{r Activity Labels}
+
+activityNames <- read.table("./data/UCI HAR Dataset/activity_labels.txt",head=FALSE)
+
+```
+
+
+* Convert the **"activity"** variable to **"factor"** type in the data frame **"allData"** using descriptive activity names
+
+```{r Factorize Activity}
+
+allData$activity <- factor(allData$activity)
+
+allData$activity <- factor(allData$activity, labels=as.character(activityNames$V2))
+
+```
+
+
+* Check the structure of the data frame **"allData"**
+
+```{r allData Structure}
+
+str(allData)
+
+```
+
+
+### Appropriately labels the data set with descriptive variable names
+
+* prefix **"t"** is replaced by **"time"**
+* **"Acc"** is replaced by **"Accelerometer"**
+* **"Gyro"** is replaced by **"Gyroscope"**
+* **"prefix f"** is replaced by **"frequency"**
+* **"Mag"** is replaced by **"Magnitude"**
+* **"BodyBody"** is replaced by **"Body"**
+
+```{r Label Dataset}
+
+names(allData) <- gsub("^t", "time", names(allData))
+
+names(allData) <- gsub("^f", "frequency", names(allData))
+
+names(allData) <- gsub("Acc", "Accelerometer", names(allData))
+
+names(allData) <- gsub("Gyro", "Gyroscope", names(allData))
+
+names(allData) <- gsub("Mag", "Magnitude", names(allData))
+
+names(allData) <- gsub("BodyBody", "Body", names(allData))
+
+```
+
+
+* Check names of the data frame **"allData"**
+
+```{r allData names}
+
+names(allData)
+
+```
+
+
+### From the data set in step 4, creates a second, independent tidy data set with the average of each variable for each activity and each subject.
+
+```{r tidy Dataset}
+
+tidyData <- aggregate(. ~subject + activity, allData, mean)
+
+tidyData <- tidyData[order(tidyData$subject, tidyData$activity),]
+
+write.table(tidyData, file = "./data/tidydata.txt",row.name=FALSE)
+
+```
+
+
+### Process list of variable names in data set for codebook
+
+```{r variable names codebook}
+
+write(names(tidyData), file = "./data/variables.txt", ncolumns = 1)
+
+```
+

@@ -1,6 +1,13 @@
-# Getting and Cleaning Data: Peer Assessment
-Hariharan D  
-Tuesday, 11^th^ July 2017  
+---
+title: 'Getting and Cleaning Data: Peer Assessment'
+author: "Hariharan D"
+date: "Tuesday, 11^th^ July 2017"
+output: 
+  html_document:
+    toc: false
+    toc_float: false
+    keep_md: true
+---
 
 <style>
 body {
@@ -33,11 +40,12 @@ This document contains necessary code and output report that answers the questio
 
 Set the chunk options.
 
+```{r Set Options, include=TRUE}
 
-```r
 library(knitr)
 
 knitr::opts_chunk$set(echo = TRUE, tidy = TRUE, message = FALSE, fig.align = "center")
+
 ```
 
 
