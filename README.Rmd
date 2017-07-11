@@ -119,3 +119,7 @@ Note: It is assumed that the required libraries (**"knitr"**, **"plyr"**) are ar
   3. Output Files - **~ 2.4 MB**
 
 
+See **"run_analysis.md"** or **"run_analysis.html"** for details on dataset creation. 
+See **"run_analysis.R"** which provides reproducible R script for cleaning UCI HAR dataset. 
+See **"codebook.md"** or **"codebook.html"** for details about project attributes and variables.
+See **"readme.md"** or **"readme.html"** for details on project abstract and work steps.
